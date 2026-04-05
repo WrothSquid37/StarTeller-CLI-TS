@@ -13,5 +13,8 @@
     "@types/node": "^25.5.2",
     "tsk": "^0.3.2",
     "typescript": "^6.0.2"
+  },
+  "dependencies": {
+    "numpy-ts": "^1.2.0"
   }
 }

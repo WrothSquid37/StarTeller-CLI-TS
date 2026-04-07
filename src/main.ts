@@ -1,5 +1,10 @@
 import * as np from 'numpy-ts';
 
+interface Cord {
+    ra: np.NDArray,
+    dec: np.NDArray
+}
+
 function calc_lst(jd_array: np.NDArray, longitude_deg: number): np.NDArray {
     
 	const jd_floor = np.floor(jd_array.subtract(0.5)).add(0.5);
@@ -19,7 +24,7 @@ function calc_lst(jd_array: np.NDArray, longitude_deg: number): np.NDArray {
 	return np.deg2rad(lst_deg);
 }
 
-function precess_cords(ra_j2000_deg: np.NDArray, dec_j2000_deg: np.NDArray, jd_target: np.NDArray) {
+function precess_cords(ra_j2000_deg: np.NDArray, dec_j2000_deg: np.NDArray, jd_target: np.NDArray): Cord {
     const t = jd_target.subtract(2451545.0).divide(36525.0);
     
     const zeta1 = t.multiply(2306.2181);
@@ -50,8 +55,23 @@ function precess_cords(ra_j2000_deg: np.NDArray, dec_j2000_deg: np.NDArray, jd_t
     const partB2 = np.sin(theta_rad).multiply(np.sin(dec_rad));
     const B = partB1.subtract(partB2);
 
-    const partC1 = np.sin(theta_rad).multiply(np.cos(dec_rad)).;
+    const partC1 = np.sin(theta_rad).multiply(np.cos(dec_rad)).multiply(ra_rad.add(zeta_rad));
+    const partC2 = np.cos(theta_rad).multiply(np.sin(dec_rad));
+    const C = partC1.add(partC2);
 
+    const dec_new_rad = np.arcsin(np.clip(C, -1.0, 1.0));
+    
+    const ra_new_rad = np.arctan2(A, B).add(z_rad);
+    
+    const ra_new_deg = np.rad2deg(ra_new_rad).mod(360.0);
+    const dec_new_deg = np.rad2deg(dec_new_rad);
+
+    const convertCord: Cord = {
+        ra: ra_new_deg,
+        dec: dec_new_deg
+    };
+
+    return convertCord;
 
 }
 

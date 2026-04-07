@@ -25,6 +25,7 @@ function calc_lst(jd_array: np.NDArray, longitude_deg: number): np.NDArray {
 }
 
 function precess_cords(ra_j2000_deg: np.NDArray, dec_j2000_deg: np.NDArray, jd_target: np.NDArray): Cord {
+    
     const t = jd_target.subtract(2451545.0).divide(36525.0);
     
     const zeta1 = t.multiply(2306.2181);
@@ -49,7 +50,7 @@ function precess_cords(ra_j2000_deg: np.NDArray, dec_j2000_deg: np.NDArray, jd_t
     const ra_rad = np.deg2rad(ra_j2000_deg);
     const dec_rad = np.deg2rad(dec_j2000_deg);
 
-    const A = np.cos(dec_rad).multiply(mp.sin(ra_rad.add(zeta_rad)));
+    const A = np.cos(dec_rad).multiply(np.sin(ra_rad.add(zeta_rad)));
 
     const partB1 = np.cos(theta_rad).multiply(np.cos(dec_rad)).multiply(np.cos(ra_rad.add(zeta_rad)));
     const partB2 = np.sin(theta_rad).multiply(np.sin(dec_rad));
@@ -75,9 +76,17 @@ function precess_cords(ra_j2000_deg: np.NDArray, dec_j2000_deg: np.NDArray, jd_t
 
 }
 
-const jdInput = np.array([2451545.0, 2460345.5]);
-const lon = -74.006;
+const jdInput1 = np.array([1,1]);
+const jdInput2 = np.array([1,1]);
+const lon = np.array([100000.0]);
 
-const result = calc_lst(jdInput, lon);
 
-console.log("LST in Radians: ", result.toArray());
+const result: Cord = precess_cords(jdInput1, jdInput2, lon);
+
+const r1 = result.ra.toArray();
+const r2 = result.dec.toArray();
+
+
+
+console.log(r1);
+console.log(r2);

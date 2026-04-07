@@ -1,20 +1,63 @@
 import * as np from 'numpy-ts';
 
-function calc_lst(jd_arrray: np.NDArray, longitude_deg: number): np.NDArray
-{
+function calc_lst(jd_array: np.NDArray, longitude_deg: number): np.NDArray {
+    
 	const jd_floor = np.floor(jd_array.subtract(0.5)).add(0.5);
 	const day_fraction = jd_array.subtract(jd_floor);
 
 	const T = jd_floor.subtract(2451545.0).divide(36525.0);
 
-	const gmst1 = T.multiply(36000.770053608).multiply(0.000387933).multiply(np.power(T, 2));
-	const gmst2 = np.power(T, 3).divide(38710000.0);
-	gmst_midnight = 100.46061837 + 36000.770053608 * T + 0.000387933 * T**2 - (T**3) / 38710000.0
-	const gmst_deg = gmst_midnight + 360.98564736629 * day_fraction;
+    const gmst1 = T.multiply(36000.770053608);
+    const gmst2 = np.power(T, 2).multiply(0.000387933);
+    const gmst3 = np.power(T, 3).divide(38710000.0);
+    const gmst_midnight = gmst1.add(100.46061837).add(gmst2).subtract(gmst3);
 
-	const 1st_deg = gmst_deg + longitude_deg;
-	1st_deg = 1st_deg % 360.0;
+    const gmst_deg = day_fraction.multiply(360.98564736629).add(gmst_midnight);
 
-	return np.deg2rad(1st_deg);
+    const lst_deg = gmst_deg.add(longitude_deg).mod(360.0);
+
+	return np.deg2rad(lst_deg);
 }
 
+function precess_cords(ra_j2000_deg: np.NDArray, dec_j2000_deg: np.NDArray, jd_target: np.NDArray) {
+    const t = jd_target.subtract(2451545.0).divide(36525.0);
+    
+    const zeta1 = t.multiply(2306.2181);
+    const zeta2 = np.power(t, 2).multiply(0.30188);
+    const zeta3 = np.power(t, 3).multiply(0.017998);
+    const zeta = zeta1.add(zeta2).subtract(zeta3);
+
+    const z1 = t.multiply(2306.2181);
+    const z2 = np.power(t, 2).multiply(1.09468);
+    const z3 = np.power(t, 3).multiply(0.018203);
+    const z = z1.add(z2).add(z3);
+
+    const t1 = t.multiply(2004.3109);
+    const t2 = np.power(t, 2).multiply(0.42665);
+    const t3 = np.power(t, 3).multiply(0.041833);
+    const theta = t1.subtract(t2).subtract(t3);
+
+    const zeta_rad = np.deg2rad(zeta.divide(3600.0));
+    const z_rad = np.deg2rad(z.divide(3600.0));
+    const theta_rad = np.deg2rad(theta.divide(3600.0));
+
+    const ra_rad = np.deg2rad(ra_j2000_deg);
+    const dec_rad = np.deg2rad(dec_j2000_deg);
+
+    const A = np.cos(dec_rad).multiply(mp.sin(ra_rad.add(zeta_rad)));
+
+    const partB1 = np.cos(theta_rad).multiply(np.cos(dec_rad)).multiply(np.cos(ra_rad.add(zeta_rad)));
+    const partB2 = np.sin(theta_rad).multiply(np.sin(dec_rad));
+    const B = partB1.subtract(partB2);
+
+    const partC1 = np.sin(theta_rad).multiply(np.cos(dec_rad)).;
+
+
+}
+
+const jdInput = np.array([2451545.0, 2460345.5]);
+const lon = -74.006;
+
+const result = calc_lst(jdInput, lon);
+
+console.log("LST in Radians: ", result.toArray());

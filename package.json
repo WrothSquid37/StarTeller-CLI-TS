@@ -11,10 +11,11 @@
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^25.5.2",
-    "tsk": "^0.3.2",
+    "tsx": "^4.21.0",
     "typescript": "^6.0.2"
   },
   "dependencies": {
-    "numpy-ts": "^1.2.0"
+    "numpy-ts": "^1.2.0",
+    "ts-node": "^10.9.2"
   }
 }

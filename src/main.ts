@@ -27,28 +27,44 @@ function calc_lst(jd_array: np.NDArray, longitude_deg: number): np.NDArray {
 function precess_cords(ra_j2000_deg: np.NDArray, dec_j2000_deg: np.NDArray, jd_target: np.NDArray): Cord {
     
     const t = jd_target.subtract(2451545.0).divide(36525.0);
-    
+   
+    // Accurate to within a few arcseconds. *split up for clarity and peforming pemdas
+    // Rewrite for PEMDAS: (t*num) + ((t^2)*num) - ((t^3)*num)  
     const zeta1 = t.multiply(2306.2181);
     const zeta2 = np.power(t, 2).multiply(0.30188);
     const zeta3 = np.power(t, 3).multiply(0.017998);
     const zeta = zeta1.add(zeta2).subtract(zeta3);
 
+    // Rewrite for PEMDAS: (t*mum) + ((t^2)*num) + ((t^3)*num)
     const z1 = t.multiply(2306.2181);
     const z2 = np.power(t, 2).multiply(1.09468);
     const z3 = np.power(t, 3).multiply(0.018203);
     const z = z1.add(z2).add(z3);
 
+    // Rewrite for PEMDAS: (t*num) - ((t^2)*num) - ((t^3)*num)
     const t1 = t.multiply(2004.3109);
     const t2 = np.power(t, 2).multiply(0.42665);
     const t3 = np.power(t, 3).multiply(0.041833);
     const theta = t1.subtract(t2).subtract(t3);
 
+    // Convert to radians 
     const zeta_rad = np.deg2rad(zeta.divide(3600.0));
     const z_rad = np.deg2rad(z.divide(3600.0));
     const theta_rad = np.deg2rad(theta.divide(3600.0));
 
     const ra_rad = np.deg2rad(ra_j2000_deg);
     const dec_rad = np.deg2rad(dec_j2000_deg);
+
+    //Precceison formulas
+    //Rewrite for formulas for PEMDAS:
+
+    //B1: Cos(theta_rad) * Cos(dec_rad) * Cos(ra_rad + zeta_rad)
+    //B2: Sin(theta_rad) * Sin(dec_rad)
+    //B: B1 - B2
+
+    //C1: Sin(theta_rad) * Cos(dec_rad) * Cos(ra_rad + zeta_rad)
+    //C2: Cos(theta_rad) * Sin(dec_rad)
+    //C: C1 + C2
 
     const A = np.cos(dec_rad).multiply(np.sin(ra_rad.add(zeta_rad)));
 
@@ -78,7 +94,7 @@ function precess_cords(ra_j2000_deg: np.NDArray, dec_j2000_deg: np.NDArray, jd_t
 
 const jdInput1 = np.array([1,1]);
 const jdInput2 = np.array([1,1]);
-const lon = np.array([100000.0]);
+const lon = np.array([1000.0]);
 
 
 const result: Cord = precess_cords(jdInput1, jdInput2, lon);

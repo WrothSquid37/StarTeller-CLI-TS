@@ -5,6 +5,11 @@ interface Cord {
     dec: np.NDArray
 }
 
+interface EquDegrees {
+    alt: np.NDArray,
+    az: np.NDArray
+}
+
 function calc_lst(jd_array: np.NDArray, longitude_deg: number): np.NDArray {
     
 	const jd_floor = np.floor(jd_array.subtract(0.5)).add(0.5);
@@ -72,7 +77,7 @@ function precess_cords(ra_j2000_deg: np.NDArray, dec_j2000_deg: np.NDArray, jd_t
     const partB2 = np.sin(theta_rad).multiply(np.sin(dec_rad));
     const B = partB1.subtract(partB2);
 
-    const partC1 = np.sin(theta_rad).multiply(np.cos(dec_rad)).multiply(ra_rad.add(zeta_rad));
+    const partC1 = np.sin(theta_rad).multiply(np.cos(dec_rad)).multiply(np.cos(ra_rad.add(zeta_rad)));
     const partC2 = np.cos(theta_rad).multiply(np.sin(dec_rad));
     const C = partC1.add(partC2);
 
@@ -92,17 +97,56 @@ function precess_cords(ra_j2000_deg: np.NDArray, dec_j2000_deg: np.NDArray, jd_t
 
 }
 
-const jdInput1 = np.array([1,1]);
-const jdInput2 = np.array([1,1]);
-const lon = np.array([1000.0]);
+function equatorial_to_horizontal_deg(ra_deg: np.NDArray, dec_deg: np.NDArray, lst_rad: np.NDArray, lat_rad: np.NDArray): EquDegrees {
+
+    const ra_rad = np.deg2rad(ra_deg);
+    const dec_rad = np.deg2rad(dec_deg);
+
+    const ha_rad = lst_rad.subtract(ra_rad);
+    
+
+    // SN1: Sin(dec_rad) * Sin(lat_rad)
+    // SN2: Cos(dec_rad) * Cos(lat_rad) * Cos(ha_rad)
+    // SN: SN1 + SN2
+    const sn1 = np.sin(dec_rad).multiply(np.sin(lat_rad));
+    const sn2 = np.cos(dec_rad).multiply(np.cos(lat_rad)).multiply(np.cos(ha_rad));
+    const sin_alt = sn1.add(sn2);
+
+    const alt_rad = np.arcsin(np.clip(sin_alt, -1.0, 1.0));
+
+    const ca = np.cos(alt_rad);
+    const cos_alt = np.where(np.abs(ca).less(1e-10), 1e-10, ca);
+
+    const sin_az_neg = np.cos(dec_rad).multiply(-1);
+
+    const sin_az = sin_az_neg.multiply(np.sin(ha_rad)).divide(cos_alt);
+
+    const caz1 = np.sin(dec_rad).subtract(np.sin(lat_rad).multiply(np.sin(alt_rad)));
+    const caz2 = np.cos(lat_rad).multiply(cos_alt);
+    
+    const cos_az = caz1.divide(caz2);
+
+    const az_rad = np.arctan2(sin_az, cos_az);
+
+    const alt_deg = np.rad2deg(alt_rad);
+    const az_deg = np.rad2deg(az_rad).mod(360.0);
+
+    const degs: EquDegrees = {
+        alt: alt_deg,
+        az: az_deg
+    };
+
+    return degs;
+
+}
 
 
-const result: Cord = precess_cords(jdInput1, jdInput2, lon);
+const a = np.array([10.0]);
+const b = np.array([10.0]);
+const c = np.array([10.0]);
+const d = np.array([10.0]);
 
-const r1 = result.ra.toArray();
-const r2 = result.dec.toArray();
+const res = equatorial_to_horizontal_deg(a, b, c, d);
 
-
-
-console.log(r1);
-console.log(r2);
+console.log(res.alt.toArray());
+console.log(res.az.toArray());

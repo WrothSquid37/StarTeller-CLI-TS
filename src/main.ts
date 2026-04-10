@@ -112,10 +112,13 @@ function equatorial_to_horizontal_deg(ra_deg: np.NDArray, dec_deg: np.NDArray, l
     const sn2 = np.cos(dec_rad).multiply(np.cos(lat_rad)).multiply(np.cos(ha_rad));
     const sin_alt = sn1.add(sn2);
 
+
     const alt_rad = np.arcsin(np.clip(sin_alt, -1.0, 1.0));
 
+
     const ca = np.cos(alt_rad);
-    const cos_alt = np.where(np.abs(ca).less(1e-10), 1e-10, ca);
+    const cos_alt = np.where(np.abs(ca).less(1e-10), np.array(1e-10), ca);
+
 
     const sin_az_neg = np.cos(dec_rad).multiply(-1);
 
@@ -148,5 +151,5 @@ const d = np.array([10.0]);
 
 const res = equatorial_to_horizontal_deg(a, b, c, d);
 
-console.log(res.alt.toArray());
-console.log(res.az.toArray());
+console.log(res.alt);
+console.log(res.az);

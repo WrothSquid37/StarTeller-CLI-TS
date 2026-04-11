@@ -1,5 +1,6 @@
 import * as np from 'numpy-ts';
 
+//Interfaces for storing values that would be returned as tuples in python to make it more clear and consise.
 interface Cord {
     ra: np.NDArray,
     dec: np.NDArray
@@ -85,8 +86,12 @@ function precess_cords(ra_j2000_deg: np.NDArray, dec_j2000_deg: np.NDArray, jd_t
     
     const ra_new_rad = np.arctan2(A, B).add(z_rad);
     
+    // Convert back to degrees
+
     const ra_new_deg = np.rad2deg(ra_new_rad).mod(360.0);
     const dec_new_deg = np.rad2deg(dec_new_rad);
+
+    // Convert ra and dec deg into a usable interface for easy access
 
     const convertCord: Cord = {
         ra: ra_new_deg,
@@ -142,14 +147,3 @@ function equatorial_to_horizontal_deg(ra_deg: np.NDArray, dec_deg: np.NDArray, l
     return degs;
 
 }
-
-
-const a = np.array([10.0]);
-const b = np.array([10.0]);
-const c = np.array([10.0]);
-const d = np.array([10.0]);
-
-const res = equatorial_to_horizontal_deg(a, b, c, d);
-
-console.log(res.alt);
-console.log(res.az);

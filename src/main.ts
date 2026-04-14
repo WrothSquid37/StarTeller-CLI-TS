@@ -11,6 +11,10 @@ interface EquDegrees {
     az: np.NDArray
 }
 
+//function unix_timestamp_to_julian_date(ts_unix: np.NDArray) {
+  //  return np.
+//}
+
 function calc_lst(jd_array: np.NDArray, longitude_deg: number): np.NDArray {
     
 	const jd_floor = np.floor(jd_array.subtract(0.5)).add(0.5);
@@ -102,17 +106,28 @@ function precess_cords(ra_j2000_deg: np.NDArray, dec_j2000_deg: np.NDArray, jd_t
 
 }
 
-function equatorial_to_horizontal_deg(ra_deg: np.NDArray, dec_deg: np.NDArray, lst_rad: np.NDArray, lat_rad: np.NDArray): EquDegrees {
+
+
+function equatorial_to_horizontal_deg(ra_deg: np.NDArray, dec_deg: np.NDArray, lst_rad: np.NDArray, lat_rad: np.NDArray, return_azimuth: boolean): np.NDArray; 
+function equatorial_to_horizontal_deg(ra_deg: np.NDArray, dec_deg: np.NDArray, lst_rad: np.NDArray, lat_rad: np.NDArray, return_azimuth: boolean): EquDegrees; 
+function equatorial_to_horizontal_deg(ra_deg: np.NDArray, dec_deg: np.NDArray, lst_rad: np.NDArray, lat_rad: np.NDArray, return_azimuth: boolean): np.NDArray | EquDegrees {
+
+    /*
+    Horizontal altitude (and optionally azimuth) from equatorial coords at a given LST.
+
+    Takes: right ascension, declination, local sidereal time, observer latitude (all radians); return_azimuth boolean
+    Returns: Altitude degree and azimuth degree if wanted and only altitude degree if not
+    */
 
     const ra_rad = np.deg2rad(ra_deg);
     const dec_rad = np.deg2rad(dec_deg);
 
     const ha_rad = lst_rad.subtract(ra_rad);
     
-
     // SN1: Sin(dec_rad) * Sin(lat_rad)
     // SN2: Cos(dec_rad) * Cos(lat_rad) * Cos(ha_rad)
     // SN: SN1 + SN2
+    
     const sn1 = np.sin(dec_rad).multiply(np.sin(lat_rad));
     const sn2 = np.cos(dec_rad).multiply(np.cos(lat_rad)).multiply(np.cos(ha_rad));
     const sin_alt = sn1.add(sn2);
@@ -120,6 +135,11 @@ function equatorial_to_horizontal_deg(ra_deg: np.NDArray, dec_deg: np.NDArray, l
 
     const alt_rad = np.arcsin(np.clip(sin_alt, -1.0, 1.0));
 
+    const alt_deg = np.rad2deg(alt_rad);
+
+    if (!return_azimuth) {
+        return alt_deg;
+    }
 
     const ca = np.cos(alt_rad);
     const cos_alt = np.where(np.abs(ca).less(1e-10), np.array(1e-10), ca);
@@ -136,7 +156,6 @@ function equatorial_to_horizontal_deg(ra_deg: np.NDArray, dec_deg: np.NDArray, l
 
     const az_rad = np.arctan2(sin_az, cos_az);
 
-    const alt_deg = np.rad2deg(alt_rad);
     const az_deg = np.rad2deg(az_rad).mod(360.0);
 
     const degs: EquDegrees = {
@@ -145,5 +164,36 @@ function equatorial_to_horizontal_deg(ra_deg: np.NDArray, dec_deg: np.NDArray, l
     };
 
     return degs;
+
+}
+
+function sun_equatorial_deg(jd : number) : number;
+function sun_equatorial_deg(jd : np.NDArray) : np.NDArray;
+function sun_equatorial_deg(jd : np.NDArray | number): number | np.NDArray {
+    const is_scalar = np.ndim(jd) == 0;
+    if (is_scalar) {
+        jd = jd as number;
+    }
+    
+    const n = jd.subtract(2451545.0);
+    const g = np.deg2rad(n.multiply(0.9856003).add(357.528).mod(360.0));
+    const q = n.multiply(0.985647436).add(280.459).mod(360.0);
+
+    const L1 = np.sin(g).multiply(1.915);
+    const L2 = np.sin(g.multiply(2)).multiply(0.020);
+    const L = q.add(L1).add(L2);
+    
+    const L_rad = np.deg2rad(L);
+
+    const e = np.deg2rad(np.subtract(23.439, n.multiply(0.00000036)));
+    const ra_rad = np.arctan2(np.cos(e).multiply(np.sin(L_rad)), np.cos(L_rad));
+    const dec_rad = np.arcsin(np.sin(e).multiply(np.sin(L_rad)));
+
+    const ra_deg = np.rad2deg(ra_rad).mod(360.0);
+    const dec_deg = np.rad2deg(dec_rad);
+    if (is_scalar) {
+        return 
+    }
+
 
 }
